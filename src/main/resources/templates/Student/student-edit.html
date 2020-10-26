@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.2</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="stylesheet" media="all" th:href="@{/css/metroStyle.css}">
+    <link rel="stylesheet" href="../../assets/libs/layui/css/layui.css" th:href="@{/assets/libs/layui/css/layui.css}"/>
+    <link rel="stylesheet" href="../../assets/module/admin.css?v=318" th:href="@{/assets/module/admin.css}"/>
+    <script type="text/javascript" src="./js/xadmin.js" th:src="@{/js/xadmin.js}"></script>
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/xm-select.js}"></script>
+    <script type="text/javascript" src="../../assets/libs/layui/layui.js" th:src="@{/assets/libs/layui/layui.js}"></script>
+    <script type="text/javascript" src="../../assets/js/common.js?v=318" th:src="@{/assets/js/common.js}"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-row">
+        <form class="layui-form layui-form model-form" id="editAdmin" lay-filter="editAdmin" onkeydown="if(event.keyCode==13){return false}">
+            <input id="studentId" type="hidden" name="studentId">
+            <div class="layui-form-item">
+                <label for="name" class="layui-form-label layui-form-required">
+                    姓名
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="name" name="name" required="" lay-verify="required"
+                           autocomplete="off" class="layui-input"  lay-verType="tips">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="xueyuan" class="layui-form-label layui-form-required">
+                    学院
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="xueyuan" name="xueyuan" required="" lay-verify="required"
+                           autocomplete="off" class="layui-input"  lay-verType="tips">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="major" class="layui-form-label layui-form-required">
+                    专业
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="major" name="major" required="" lay-verify="required"
+                           autocomplete="off" class="layui-input"  lay-verType="tips">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="clas" class="layui-form-label layui-form-required">
+                    班级
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="clas" name="clas" required="" lay-verify="required"
+                           autocomplete="off" class="layui-input"  lay-verType="tips">
+                </div>
+            </div>
+
+
+            <div class="layui-form-item layui-hide">
+                <button  class="layui-btn" id="edit" lay-filter="edit" lay-submit>
+                    修改
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    window.onload=function () {
+        layui.use(['form', 'layer','jquery'],function() {
+            var $ = layui.jquery;
+            var form = layui.form,
+                layer = layui.layer;
+
+            var setting = {
+                data : {
+                    simpleData : {
+                        enable : true,
+                        rootPId : 0
+                    }
+                },
+                check : {
+                    enable : true,
+                    chkboxType : { "Y": "", "N": ""}
+                    // nocheckInherit : true
+                }
+            };
+
+
+
+            // var selectRole = function(roleIds){
+            //     //加载页面的角色菜单
+            //     if(roleIds != null && roleIds != ""){
+            //         console.log(roleIds);
+            //         $.each(roleIds, function(index, value){
+            //             var domId = "#" + value.roleId;
+            //             console.log(domId);
+            //             $(domId).attr("checked", "checked");
+            //         });
+            //         form.render('checkbox');
+            //     }
+            // }
+
+            //自定义验证规则
+            form.verify({
+                nikename: function(value) {
+                    if (value.length < 2) {
+                        return '昵称至少得2个字符啊';
+                    }
+                },
+                pass: [/(.+){6,12}$/, '密码必须6到12位'],
+            });
+            $.ajax({
+                url: 'getStudentById/'+$('#studentId').val(),
+                type: 'GET',
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    if(data.success) {
+                        var userInfo = data.data[0];
+                        var roles = data.data[1];
+                        form.val('editAdmin',userInfo);
+                        selectRole(roles);
+                    } else {
+                        layer.msg(data.msg, {icon: 5},1500);
+                    }
+
+                },
+                error: function() {
+                    layer.msg('系统错误！'+$('#studentId').val(), {
+                        icon: 5
+                    });
+
+                }
+            });
+
+            //监听提交
+            form.on('submit(edit)', function (data) {
+                $.ajax({
+                    url: 'updateStudent',
+                    data: $('#editAdmin').serialize(),
+                    type: 'PUT',
+                    dataType: 'json',
+                    success : function(data){
+                        if(data.success) {
+                            layer.msg(data.msg, {icon: 6,time: 1500},function () {
+                                parent.layui.table.reload('StudentTable');
+                                //当你在iframe页面关闭自身时
+                                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                                parent.layer.close(index); //再执行关闭
+                            });
+                        }else {
+                            layer.msg(data.msg, {icon: 5,time: 1500});
+                        }
+                    },
+                    error: function () {
+                        layer.msg('系统错误！', {
+                            icon: 5
+                        });
+                    }
+                });
+                return false;
+            });
+
+        });
+    }
+
+
+</script>
+</body>
+
+</html>
